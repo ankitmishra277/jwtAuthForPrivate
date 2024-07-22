@@ -1,9 +1,26 @@
+# Use the Maven image to build the application
 FROM maven:3.8.5-openjdk-17 AS build
-COPY ..
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the current directory contents into the container at /app
+COPY . /app
+
+# Package the application, skipping the tests
 RUN mvn clean package -DskipTests
 
-
+# Use a slim version of OpenJDK 17 for the runtime environment
 FROM openjdk:17.0.1-jdk-slim
-COPY --from=build /target/JWT-0.0.1-SNAPSHOT.jar jwt.jar
+
+# Set the working directory for the runtime image
+WORKDIR /app
+
+# Copy the packaged jar from the build stage
+COPY --from=build /app/target/JWT-0.0.1-SNAPSHOT.jar /app/jwt.jar
+
+# Expose the port the application will run on
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","jwt.jar"]
+
+# Run the application
+ENTRYPOINT ["java", "-jar", "jwt.jar"]
